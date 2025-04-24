@@ -1,4 +1,4 @@
-import { AbsoluteFill, Img, Sequence, staticFile, useVideoConfig, Audio } from "remotion";
+import { AbsoluteFill, Img, Sequence, staticFile, useVideoConfig, Audio, useCurrentFrame } from "remotion";
 import { useState, useEffect } from "react";
 
 export const RemotionVideo = ({ script, imageList, audioFile, captions, durationInFrames }) => {
@@ -24,7 +24,12 @@ export const RemotionVideo = ({ script, imageList, audioFile, captions, duration
 
         }
     }, [audioFile]);
-
+    const frame = useCurrentFrame()
+    const getCurrentTime = ()=>{
+        const currentFrame = frame/30*1000
+        const currentCaption = captions.find((word)=>currentFrame>=word.start && currentFrame<=word.end)
+        return currentCaption?currentCaption.text:''
+    }
 
 
     return (
@@ -35,7 +40,7 @@ export const RemotionVideo = ({ script, imageList, audioFile, captions, duration
                 {imageList?.map((image: string, index: number) => (
                     <Sequence
                         key={index}
-                        from={index * durationInFrames} // Use the duration prop
+                        from={index * durationInFrames} 
                         durationInFrames={durationInFrames}
                     >
                         <Img
@@ -46,6 +51,20 @@ export const RemotionVideo = ({ script, imageList, audioFile, captions, duration
                                 objectFit: "cover",
                             }}
                         />
+                        <AbsoluteFill
+                            style={{
+                                color: "white",
+                                justifyContent: "center",
+                                top: undefined,
+                                bottom: 50,
+                                height: 150,
+                                textAlign: "center",
+                                width: '100%'
+                            }}
+
+                        >
+                            <h2>{getCurrentTime(    )}</h2>
+                        </AbsoluteFill>
                     </Sequence>
                 ))}
             </AbsoluteFill>

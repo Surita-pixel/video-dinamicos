@@ -43,14 +43,14 @@ function VideoPlayer({
       const calculateDuration = () => {
         if (videoData.captions.length > 0) {
           const lastCaption = videoData.captions[videoData.captions.length - 1];
-          const duration = lastCaption.end / 1000 * 30; // Assuming fps is 30
+          const duration = lastCaption.end / 1000 * 30; 
           setDurationInFrames(duration);
           durationCalculated.current = true;
         }
       };
       calculateDuration();
     }
-  }, [videoData?.captions]); // Depend on videoData and captions
+  }, [videoData?.captions]); 
 
   return (
     <div>
