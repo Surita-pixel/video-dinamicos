@@ -1,21 +1,42 @@
-import { AbsoluteFill, Img, Sequence, useVideoConfig } from "remotion";
+import { AbsoluteFill, Img, Sequence, staticFile, useVideoConfig, Audio } from "remotion";
+import { useState, useEffect } from "react";
 
-export const RemotionVideo = ({ script, imageList, audioFile, captions }) => {
-    console.log("script", imageList);
-    const { fps, durationInFrames } = useVideoConfig();
+export const RemotionVideo = ({ script, imageList, audioFile, captions, durationInFrames }) => {
+    const { fps } = useVideoConfig();
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
-    const getDurationFrame = () => {
-        return Math.floor(durationInFrames / imageList.length);
-    };
+    useEffect(() => {
+        if (audioFile) {
+            let cleanedAudioUrl: string | null = null;
+
+            if (audioFile.startsWith("/public/")) {
+                cleanedAudioUrl = audioFile.substring("/public/".length);
+            } else {
+                cleanedAudioUrl = audioFile;
+            }
+
+            if (cleanedAudioUrl) {
+                setAudioUrl(cleanedAudioUrl);
+            } else {
+                console.warn("Invalid audio file URL: ", audioFile);
+                setAudioUrl(null);
+            }
+
+        }
+    }, [audioFile]);
+
+
 
     return (
         <div>
             <AbsoluteFill className="bg-white">
+                {audioUrl && <Audio src={staticFile(audioUrl)} />}
+
                 {imageList?.map((image: string, index: number) => (
                     <Sequence
                         key={index}
-                        from={index * getDurationFrame()}
-                        durationInFrames={getDurationFrame()}
+                        from={index * durationInFrames} // Use the duration prop
+                        durationInFrames={durationInFrames}
                     >
                         <Img
                             src={image}
@@ -28,6 +49,7 @@ export const RemotionVideo = ({ script, imageList, audioFile, captions }) => {
                     </Sequence>
                 ))}
             </AbsoluteFill>
+
         </div>
     );
 };

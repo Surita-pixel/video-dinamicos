@@ -1,6 +1,6 @@
 import { Player } from "@remotion/player";
 import { RemotionVideo } from "./RemotionVideo";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 function VideoPlayer({
   playVideo,
@@ -9,12 +9,14 @@ function VideoPlayer({
   playVideo: boolean;
   videoId: string;
 }) {
-  const [videoData, setVideoData] = useState<Record<string, any> | null>(null); // Initialize as null
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const [videoData, setVideoData] = useState<Record<string, any> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [durationInFrames, setDurationInFrames] = useState(100);
+  const durationCalculated = useRef(false);
 
   useEffect(() => {
     const getVideoData = async (videoId: string) => {
-      setIsLoading(true); // Set loading to true when fetching data
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/getJsonByid?id=${videoId}`);
         if (!response.ok) {
@@ -25,9 +27,9 @@ function VideoPlayer({
         setVideoData(result);
       } catch (error) {
         console.error("Failed to fetch video data:", error);
-        // Handle error appropriately, e.g., set an error state
+
       } finally {
-        setIsLoading(false); // Set loading to false after fetching data
+        setIsLoading(false);
       }
     };
 
@@ -36,6 +38,19 @@ function VideoPlayer({
     }
   }, [videoId]);
 
+  useEffect(() => {
+    if (videoData?.captions && !durationCalculated.current) {
+      const calculateDuration = () => {
+        if (videoData.captions.length > 0) {
+          const lastCaption = videoData.captions[videoData.captions.length - 1];
+          const duration = lastCaption.end / 1000 * 30; // Assuming fps is 30
+          setDurationInFrames(duration);
+          durationCalculated.current = true;
+        }
+      };
+      calculateDuration();
+    }
+  }, [videoData?.captions]); // Depend on videoData and captions
 
   return (
     <div>
@@ -45,15 +60,16 @@ function VideoPlayer({
       ) : videoData ? (
         <Player
           component={RemotionVideo}
-          durationInFrames={120}
+          durationInFrames={Number(durationInFrames.toFixed(0))}
           compositionWidth={300}
           compositionHeight={450}
           fps={30}
           inputProps={{
-            script: videoData.script,
-            imageList: videoData.imageList,
-            audioFile: videoData.audioFile,
-            captions: videoData.captions,
+            script: videoData?.script || "",
+            imageList: videoData?.imageList || [],
+            audioFile: videoData?.audioFile || "",
+            captions: videoData?.captions || [],
+            durationInFrames: durationInFrames
           }}
           controls={true}
         />
